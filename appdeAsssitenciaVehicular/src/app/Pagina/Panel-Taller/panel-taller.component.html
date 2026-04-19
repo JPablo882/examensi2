@@ -52,27 +52,155 @@
   </aside>
 
   <main class="content">
+    <div class="top-contact-bar">
+        <button class="top-notify-btn" type="button" aria-label="Notificaciones" (click)="toggleNotificaciones()">
+            <span class="notify-icon">🔔</span>
+            <span class="notify-dot"></span>
+        </button>
+
+        <div class="notifications-panel" *ngIf="mostrarNotificaciones">
+          <div class="notifications-header">
+            <h4>Notificaciones</h4>
+            <span>{{ notificaciones.length }}</span>
+          </div>
+
+          <div class="notification-item" *ngFor="let item of notificaciones">
+            <strong>{{ item.titulo }}</strong>
+            <p>{{ item.detalle }}</p>
+           <small>{{ item.tiempo }}</small>
+          </div>
+        </div>
+        <a href="tel:900000000" class="top-contact-phone">900 000 000</a>
+    </div>
+
+        
     <section *ngIf="selectedMenu === 'dashboard'">
       <div class="topbar">
         <div>
           <h1>Bienvenido, {{ taller.nombre }}</h1>
           <p>Gestiona tus servicios y solicitudes asignadas</p>
         </div>
-        <div class="topbar-right">Taller activo</div>
-      </div>
 
-      <div class="cards">
-        <div class="card" *ngFor="let item of resumen">
-          <div class="card-top">
-            <div>
-              <p class="card-title">{{ item.titulo }}</p>
-              <h3>{{ item.valor }}</h3>
-              <span>{{ item.detalle }}</span>
-            </div>
-            <div class="icon-box">{{ item.icono }}</div>
+        <div class="topbar-right">
+          <div class="status-toggle-wrap">
+            <span
+              class="status-label"
+              [class.active-text]="estadoTaller === 'Activo'"
+              [class.inactive-text]="estadoTaller === 'Inactivo'">
+              {{ estadoTaller === 'Activo' ? 'Taller activo' : 'Taller inactivo' }}
+            </span>
+
+            <button
+              type="button"
+              class="status-toggle"
+              [class.active]="estadoTaller === 'Activo'"
+              [class.inactive]="estadoTaller === 'Inactivo'"
+              (click)="toggleEstadoTaller()"
+              aria-label="Cambiar estado del taller">
+              <span class="toggle-track">
+                <span class="toggle-thumb"></span>
+              </span>
+            </button>
           </div>
         </div>
       </div>
+
+      <div class="cards charts-cards" *ngIf="isBrowser; else cardsSinGrafica">
+  <div class="card chart-card">
+    <div class="card-top">
+      <div>
+        <p class="card-title">Servicios Asignados</p>
+        <h3>{{ dashboardCards.serviciosAsignados }}</h3>
+        <span>+3 hoy</span>
+      </div>
+      <div class="icon-box">📋</div>
+    </div>
+
+    <div class="chart-box">
+      <canvas
+        baseChart
+        [data]="serviciosChartData"
+        [options]="dashboardChartOptions"
+        [type]="'bar'">
+      </canvas>
+    </div>
+  </div>
+
+  <div class="card chart-card">
+    <div class="card-top">
+      <div>
+        <p class="card-title">Servicios Completados</p>
+        <h3>{{ dashboardCards.serviciosCompletadosMes }}</h3>
+        <span>Este mes</span>
+      </div>
+      <div class="icon-box">✅</div>
+    </div>
+
+    <div class="chart-box">
+      <canvas
+        baseChart
+        [data]="completadosChartData"
+        [options]="dashboardChartOptions"
+        [type]="'bar'">
+      </canvas>
+    </div>
+  </div>
+
+  <div class="card chart-card">
+    <div class="card-top">
+      <div>
+        <p class="card-title">Servicios Activos</p>
+        <h3>{{ dashboardCards.serviciosActivos }}</h3>
+        <span>En proceso</span>
+      </div>
+      <div class="icon-box">🕒</div>
+    </div>
+
+    <div class="chart-box">
+      <canvas
+        baseChart
+        [data]="activosChartData"
+        [options]="lineChartOptions"
+        [type]="'line'">
+      </canvas>
+    </div>
+  </div>
+
+  <div class="card chart-card">
+    <div class="card-top">
+      <div>
+        <p class="card-title">Ingresos del Mes</p>
+        <h3>Bs {{ dashboardCards.ingresosMes | number:'1.0-2' }}</h3>
+        <span>Servicios realizados</span>
+      </div>
+      <div class="icon-box">💰</div>
+    </div>
+
+    <div class="chart-box">
+      <canvas
+        baseChart
+        [data]="ingresosChartData"
+        [options]="dashboardChartOptions"
+        [type]="'bar'">
+      </canvas>
+    </div>
+  </div>
+</div>
+
+<ng-template #cardsSinGrafica>
+  <div class="cards">
+    <div class="card" *ngFor="let item of resumen">
+      <div class="card-top">
+        <div>
+          <p class="card-title">{{ item.titulo }}</p>
+          <h3>{{ item.valor }}</h3>
+          <span>{{ item.detalle }}</span>
+        </div>
+        <div class="icon-box">{{ item.icono }}</div>
+      </div>
+    </div>
+  </div>
+</ng-template>
 
       <section class="cta-box">
         <div>
@@ -91,25 +219,87 @@
           <h2>Solicitudes activas</h2>
         </div>
 
+        <div class="filtros-box">
+          <div class="filtro-group filtro-busqueda">
+            <label>Buscar</label>
+            <input
+              type="text"
+              [(ngModel)]="filtros.busqueda"
+              placeholder="Buscar por código, servicio, cliente o ubicación"
+            />
+          </div>
+
+          <div class="filtro-group">
+            <label>Estado</label>
+            <select [(ngModel)]="filtros.estado">
+              <option value="">Todos</option>
+              <option value="Pendiente">Pendiente</option>
+              <option value="Aceptada">Aceptada</option>
+              <option value="Asignado">Asignado</option>
+              <option value="En proceso">En proceso</option>
+              <option value="Finalizado">Finalizado</option>
+              <option value="Cerrado">Cerrado</option>
+            </select>
+          </div>
+
+          <div class="filtro-group">
+            <label>Prioridad</label>
+            <select [(ngModel)]="filtros.prioridad">
+              <option value="">Todas</option>
+              <option value="Alta">Alta</option>
+              <option value="Media">Media</option>
+              <option value="Baja">Baja</option>
+            </select>
+          </div>
+
+          <div class="filtro-group">
+            <label>Cliente</label>
+            <input
+              type="text"
+              [(ngModel)]="filtros.cliente"
+              placeholder="Filtrar por cliente"
+            />
+          </div>
+
+          <div class="filtro-group">
+            <label>Fecha</label>
+            <input
+              type="date"
+              [(ngModel)]="filtros.fecha"
+            />
+          </div>
+
+          <div class="filtro-group filtro-btn">
+            <label>&nbsp;</label>
+            <button class="btn-clear-filter" (click)="limpiarFiltros()">
+              Limpiar filtros
+            </button>
+          </div>
+        </div>
+
         <table>
           <thead>
             <tr>
+              <th>Código</th>
               <th>Servicio</th>
               <th>Cliente</th>
               <th>Ubicación</th>
               <th>Técnico</th>
               <th>Estado</th>
+              <th>Prioridad</th>
               <th>Fecha</th>
             </tr>
           </thead>
 
           <tbody>
-            <tr *ngFor="let s of solicitudesActivas">
+            <tr *ngFor="let s of solicitudesFiltradas">
+              <td>{{ s.codigo }}</td>
               <td>{{ s.servicio }}</td>
               <td>{{ s.cliente }}</td>
               <td>{{ s.ubicacion }}</td>
-              <td>{{ s.tecnico }}</td>
+              <td>{{ s.tecnico || 'Sin asignar' }}</td>
               <td>{{ s.estado }}</td>
+              <td>{{ s.prioridad }}</td>
               <td>{{ s.fecha }}</td>
             </tr>
           </tbody>
@@ -137,36 +327,91 @@
     </section>
 
     <section *ngIf="selectedMenu === 'solicitudes'">
-      <div class="page-header">
-        <h1>Solicitudes Asignadas</h1>
-        <p>Seguimiento y administración de servicios activos</p>
+      <div class="page-header solicitudes-header">
+        <div>
+          <h1>Gestión de Solicitudes</h1>
+          <p>Administra, asigna y da seguimiento a los servicios del taller</p>
+        </div>
+
+        <button class="btn-dark-action">
+          + Registrar Servicio
+        </button>
       </div>
 
-      <section class="table-box">
-        <table>
-          <thead>
-            <tr>
-              <th>Servicio</th>
-              <th>Cliente</th>
-              <th>Ubicación</th>
-              <th>Técnico</th>
-              <th>Estado</th>
-              <th>Fecha</th>
-            </tr>
-          </thead>
+      <div class="solicitudes-grid">
+        <article class="solicitud-card" *ngFor="let s of solicitudesActivas">
+          <div class="solicitud-top">
+            <div>
+              <h3>{{ s.codigo }}</h3>
+              <p class="solicitud-fecha">{{ s.fecha }}</p>
+            </div>
 
-          <tbody>
-            <tr *ngFor="let s of solicitudesActivas">
-              <td>{{ s.servicio }}</td>
-              <td>{{ s.cliente }}</td>
-              <td>{{ s.ubicacion }}</td>
-              <td>{{ s.tecnico }}</td>
-              <td>{{ s.estado }}</td>
-              <td>{{ s.fecha }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
+            <div class="badges">
+              <span [class]="getPrioridadClase(s.prioridad)">
+                {{ s.prioridad }}
+              </span>
+              <span [class]="getEstadoClase(s.estado)">
+                {{ s.estado }}
+              </span>
+            </div>
+          </div>
+
+          <div class="solicitud-content">
+            <div class="solicitud-info">
+              <div class="info-item">
+                <span>Servicio</span>
+                <strong>{{ s.servicio }}</strong>
+              </div>
+
+              <div class="info-item">
+                <span>Cliente</span>
+                <strong>{{ s.cliente }}</strong>
+              </div>
+
+              <div class="info-item">
+                <span>Ubicación</span>
+                <strong>{{ s.ubicacion }}</strong>
+              </div>
+
+              <div class="info-item">
+                <span>Vehículo</span>
+                <strong>{{ s.vehiculo }}</strong>
+              </div>
+            </div>
+
+            <div class="tecnico-panel">
+              <h4>Técnico Asignado</h4>
+
+              <ng-container *ngIf="s.tecnico; else sinTecnico">
+                <p><strong>{{ s.tecnico }}</strong></p>
+                <p>📞 {{ s.telefonoTecnico }}</p>
+              </ng-container>
+
+              <ng-template #sinTecnico>
+                <p class="sin-tecnico">Aún no hay técnico asignado</p>
+              </ng-template>
+            </div>
+          </div>
+
+          <div class="solicitud-actions">
+            <button class="btn-action btn-accept" (click)="aceptarSolicitud(s)">
+              Aceptar solicitud
+            </button>
+
+            <button class="btn-action btn-assign" (click)="asignarTecnico(s)">
+              Asignar técnico
+            </button>
+
+            <button class="btn-action btn-update" (click)="actualizarEstado(s)">
+              Actualizar estado
+            </button>
+
+            <button class="btn-action btn-close" (click)="cerrarServicio(s)">
+              Cerrar servicio
+            </button>
+          </div>
+        </article>
+      </div>
     </section>
 
     <section *ngIf="selectedMenu === 'historial'">
@@ -176,6 +421,55 @@
       </div>
 
       <section class="table-box">
+        <div class="table-header">
+          <h2>Historial registrado</h2>
+        </div>
+
+        <div class="filtros-box historial-filtros">
+          <div class="filtro-group filtro-busqueda">
+            <label>Buscar</label>
+            <input
+              type="text"
+              [(ngModel)]="filtrosHistorial.busqueda"
+              placeholder="Buscar por servicio, cliente o monto"
+            />
+          </div>
+
+          <div class="filtro-group">
+            <label>Estado</label>
+            <select [(ngModel)]="filtrosHistorial.estado">
+              <option value="">Todos</option>
+              <option value="Completado">Completado</option>
+              <option value="Finalizado">Finalizado</option>
+              <option value="Cerrado">Cerrado</option>
+            </select>
+          </div>
+
+          <div class="filtro-group">
+            <label>Cliente</label>
+            <input
+              type="text"
+              [(ngModel)]="filtrosHistorial.cliente"
+              placeholder="Filtrar por cliente"
+            />
+          </div>
+
+          <div class="filtro-group">
+            <label>Fecha</label>
+            <input
+              type="date"
+              [(ngModel)]="filtrosHistorial.fecha"
+            />
+          </div>
+
+          <div class="filtro-group filtro-btn">
+            <label>&nbsp;</label>
+            <button class="btn-clear-filter" (click)="limpiarFiltrosHistorial()">
+              Limpiar filtros
+            </button>
+          </div>
+        </div>
+
         <table>
           <thead>
             <tr>
@@ -188,7 +482,7 @@
           </thead>
 
           <tbody>
-            <tr *ngFor="let h of historial">
+            <tr *ngFor="let h of historialFiltrado">
               <td>{{ h.servicio }}</td>
               <td>{{ h.cliente }}</td>
               <td>{{ h.estado }}</td>
@@ -246,6 +540,9 @@
               <p>{{ perfilTaller.especialidad }}</p>
             </div>
           </div>
+        </div>
+        <div class="perfil-actions">
+            <button class="btn-outline">Editar Perfil</button>
         </div>
       </section>
     </section>

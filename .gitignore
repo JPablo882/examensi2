@@ -1,0 +1,17 @@
+# Python
+backend_fastapi/venv/
+backend_fastapi/__pycache__/
+*.pyc
+
+# Node / Angular
+node_modules/
+dist/
+
+# Entornos
+.env
+
+# VSCode
+.vscode/
+
+# Sistema
+.DS_Store

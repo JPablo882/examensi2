@@ -31,7 +31,11 @@ export class AuthComponent {
     telefono: '',
     password: '',
     confirmPassword: '',
-    aceptaTerminos: false
+    aceptaTerminos: false,
+    nombreTaller: '',
+    direccion: '',
+    ubicacion: '',
+    emailTaller: ''
   };
 
   cambiarModo(mode: 'login' | 'register'): void {
@@ -82,7 +86,11 @@ export class AuthComponent {
           telefono: '',
           password: '',
           confirmPassword: '',
-          aceptaTerminos: false
+          aceptaTerminos: false,
+          nombreTaller: '',
+          direccion: '',
+          ubicacion: '',
+          emailTaller: ''
         };
 
         this.mode = 'login';

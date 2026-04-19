@@ -81,8 +81,8 @@
 
         <div class="demo-box">
           <p>Cuentas de prueba:</p>
-          <p><strong>Cliente:</strong> cliente@ejemplo.com</p>
-          <p><strong>Staff:</strong> admin@emergauto.com</p>
+          <p><strong>Taller:</strong> taller1@gmail.com</p>
+          <p><strong>Admin:</strong> dbanegas205@gmail.com</p>
         </div>
       </form>
     }
@@ -98,10 +98,10 @@
           required
         />
 
-        <label>Email</label>
+        <label>Email del usuario</label>
         <input
           type="email"
-          placeholder="tu@email.com"
+          placeholder="usuario@email.com"
           [(ngModel)]="registerData.email"
           name="registerEmail"
           required
@@ -113,6 +113,42 @@
           placeholder="+591 70000000"
           [(ngModel)]="registerData.telefono"
           name="telefono"
+          required
+        />
+
+        <label>Nombre del Taller</label>
+        <input
+          type="text"
+          placeholder="Taller JP"
+          [(ngModel)]="registerData.nombreTaller"
+          name="nombreTaller"
+          required
+        />
+
+        <label>Dirección</label>
+        <input
+          type="text"
+          placeholder="Av. Virgen de Luján"
+          [(ngModel)]="registerData.direccion"
+          name="direccion"
+          required
+        />
+
+        <label>Ubicación</label>
+        <input
+          type="text"
+          placeholder="Santa Cruz de la Sierra"
+          [(ngModel)]="registerData.ubicacion"
+          name="ubicacion"
+          required
+        />
+
+        <label>Email del Taller</label>
+        <input
+          type="email"
+          placeholder="contacto@taller.com"
+          [(ngModel)]="registerData.emailTaller"
+          name="emailTaller"
           required
         />
 
@@ -204,5 +240,4 @@
     <p>© 2026 EmergAuto. Todos los derechos reservados. | Política de Privacidad | Términos y Condiciones</p>
     <a routerLink="/admin-login" class="admin-access-link">Acceso Administrativo</a>
   </div>
-
 </footer>

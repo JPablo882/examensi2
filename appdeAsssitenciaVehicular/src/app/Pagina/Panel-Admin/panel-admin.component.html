@@ -17,6 +17,18 @@
         </a>
 
         <a
+          (click)="setMenu('usuarios')"
+          [class.active]="selectedMenu === 'usuarios'">
+          Usuarios
+        </a>
+
+        <a 
+          (click)="toggleSoporteGlobal()"
+          [class.active]="soporteAbierto">
+          Soporte
+        </a>
+
+        <a
           (click)="mostrarPerfil()"
           [class.active]="selectedMenu === 'perfil'">
           Mi Perfil
@@ -33,6 +45,38 @@
         </div>
       </div>
 
+      <div class="system-box">
+  <div class="system-header">
+    <span class="system-dot"></span>
+    <span>SISTEMA OPERATIVO</span>
+  </div>
+
+  <div class="system-metric">
+    <div class="metric-top">
+      <span>CPU</span>
+      <strong>{{ systemInfo.cpu }}%</strong>
+    </div>
+    <div class="metric-bar">
+      <div class="metric-fill cpu-fill" [style.width.%]="systemInfo.cpu"></div>
+    </div>
+  </div>
+
+  <div class="system-metric">
+    <div class="metric-top">
+      <span>RAM</span>
+      <strong>{{ systemInfo.ram }}%</strong>
+    </div>
+    <div class="metric-bar">
+      <div class="metric-fill ram-fill" [style.width.%]="systemInfo.ram"></div>
+    </div>
+  </div>
+
+  <div class="system-metric uptime-row">
+    <span>Uptime</span>
+    <strong>{{ systemInfo.uptime }}</strong>
+  </div>
+</div>
+
       <button class="logout-btn" (click)="cerrarSesion()">
         Cerrar sesión
       </button>
@@ -40,6 +84,27 @@
   </aside>
 
   <main class="content">
+    <div class="top-contact-bar">
+       <div class="top-bar-left">
+           <button class="top-notify-btn" type="button" aria-label="Notificaciones" (click)="toggleNotificacionesAdmin()">
+                <span class="notify-icon">🔔</span>
+                <span class="notify-dot"></span>
+           </button>
+           <div class="notifications-panel" *ngIf="mostrarNotificacionesAdmin">
+                <div class="notifications-header">
+                     <h4>Notificaciones</h4>
+                     <span>{{ notificacionesAdmin.length }}</span>
+                </div>
+                <div class="notification-item" *ngFor="let item of notificacionesAdmin">
+                   <strong>{{ item.titulo }}</strong>
+                   <p>{{ item.detalle }}</p>
+                   <small>{{ item.tiempo }}</small>
+                </div>
+           </div>
+       </div>
+
+        <a href="tel:900000000" class="top-contact-phone">900 000 000</a>
+    </div>
     <section *ngIf="selectedMenu === 'dashboard'">
       <div class="topbar">
         <div>
@@ -49,20 +114,124 @@
       </div>
 
       <div class="cards">
-        <div class="card" *ngFor="let item of resumen">
+        <div class="card chart-card">
           <div class="card-top">
             <div>
-              <p class="card-title">{{ item.titulo }}</p>
-              <h3>{{ item.valor }}</h3>
-              <span>{{ item.detalle }}</span>
+              <p class="card-title">Usuarios Totales</p>
+              <h3>{{ dashboardCards.usuariosTotales }}</h3>
+              <span>Datos Reales</span>
             </div>
-            <div class="icon-box">{{ item.icono }}</div>
+            <div class="icon-box">👤</div>
+          </div>
+          <div class="chart-box" *ngIf="isBrowser">
+            <canvas baseChart [data]="usuariosChartData" [options]="chartOptions" [type]="'line'"></canvas>
+          </div>
+        </div>
+
+        <div class="card chart-card">
+          <div class="card-top">
+            <div>
+              <p class="card-title">Talleres Registrados</p>
+              <h3>{{ dashboardCards.talleresRegistrados }}</h3>
+              <span>Datos Reales</span>
+            </div>
+            <div class="icon-box">🔧</div>
+          </div>
+          <div class="chart-box" *ngIf="isBrowser">
+            <canvas baseChart [data]="talleresChartData" [options]="chartOptions" [type]="'bar'"></canvas>
+          </div>
+        </div>
+
+        <div class="card chart-card">
+          <div class="card-top">
+            <div>
+              <p class="card-title">Solicitudes Activas</p>
+              <h3>{{ dashboardCards.solicitudesActivas }}</h3>
+              <span>En proceso</span>
+            </div>
+            <div class="icon-box">📋</div>
+          </div>
+          <div class="chart-box" *ngIf="isBrowser">
+            <canvas baseChart [data]="solicitudesChartData" [options]="chartOptions" [type]="'bar'"></canvas>
+          </div>
+        </div>
+
+        <div class="card chart-card">
+          <div class="card-top">
+            <div>
+              <p class="card-title">Ingresos del Mes</p>
+              <h3>Bs {{ dashboardCards.ingresosMes | number:'1.0-2' }}</h3>
+              <span>Comisiones acumuladas</span>
+            </div>
+            <div class="icon-box">💰</div>
+          </div>
+          <div class="chart-box" *ngIf="isBrowser">
+            <canvas baseChart [data]="ingresosChartData" [options]="chartOptions" [type]="'bar'"></canvas>
           </div>
         </div>
       </div>
 
+      <section class="table-box alerts-box">
+        <div class="table-header">
+          <h2>Alertas rápidas</h2>
+        </div>
+
+        <div class="alerts-grid">
+          <div class="alert-card" *ngFor="let alerta of alertas" [class.urgente]="alerta.tipo === 'urgente'">
+            {{ alerta.texto }}
+          </div>
+        </div>
+      </section>
+
       <section class="table-box">
-        <h2>Solicitudes recientes</h2>
+        <div class="table-header">
+          <h2>Solicitudes recientes</h2>
+        </div>
+
+        <div class="filtros-box">
+          <div class="filtro-group filtro-busqueda">
+            <label>Buscar</label>
+            <input
+              type="text"
+              [(ngModel)]="filtrosSolicitudes.busqueda"
+              placeholder="Buscar por servicio, usuario o taller"
+            />
+          </div>
+
+          <div class="filtro-group">
+            <label>Estado</label>
+            <select [(ngModel)]="filtrosSolicitudes.estado">
+              <option value="">Todos</option>
+              <option value="Pendiente">Pendiente</option>
+              <option value="Asignado">Asignado</option>
+              <option value="Completado">Completado</option>
+            </select>
+          </div>
+
+          <div class="filtro-group">
+            <label>Taller</label>
+            <input
+              type="text"
+              [(ngModel)]="filtrosSolicitudes.taller"
+              placeholder="Filtrar por taller"
+            />
+          </div>
+
+          <div class="filtro-group">
+            <label>Fecha</label>
+            <input
+              type="date"
+              [(ngModel)]="filtrosSolicitudes.fecha"
+            />
+          </div>
+
+          <div class="filtro-group filtro-btn">
+            <label>&nbsp;</label>
+            <button class="btn-clear-filter" (click)="limpiarFiltrosSolicitudes()">
+              Limpiar filtros
+            </button>
+          </div>
+        </div>
 
         <table>
           <thead>
@@ -72,21 +241,155 @@
               <th>Taller</th>
               <th>Estado</th>
               <th>Fecha</th>
+              <th>Acciones</th>
             </tr>
           </thead>
 
           <tbody>
-            <tr *ngFor="let s of solicitudesRecientes">
+            <tr *ngFor="let s of solicitudesFiltradas">
               <td>{{ s.servicio }}</td>
               <td>{{ s.usuario }}</td>
               <td>{{ s.taller }}</td>
-              <td>{{ s.estado }}</td>
-              <td>{{ s.fecha }}</td>
+              <td>
+                <span [class]="getEstadoClase(s.estado)">
+                  {{ s.estado }}
+                </span>
+              </td>
+              <td>{{ s.fecha | date:'aaaa-MM-dd' }}</td>
+              <td>
+                <div class="action-buttons">
+                  <button class="btn-outline" (click)="verDetalle(s)">Ver</button>
+                  <button class="btn-outline" (click)="asignarTaller(s)">Asignar</button>
+                  <button class="btn-outline" (click)="cambiarEstado(s)">Estado</button>
+                </div>
+              </td>
             </tr>
           </tbody>
         </table>
       </section>
+
+      <div class="bottom-grid">
+        <section class="panel-box">
+          <h3>Talleres más activos</h3>
+          <div class="ranking-list">
+            <div class="ranking-item" *ngFor="let taller of talleresTop">
+              <div>
+                <strong>{{ taller.nombre }}</strong>
+                <p>{{ taller.servicios }} servicios · {{ taller.tiempoPromedio }}</p>
+              </div>
+              <span class="rating">⭐ {{ taller.calificacion }}</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel-box">
+          <h3>Resumen del sistema</h3>
+          <ul>
+            <li>Usuarios nuevos esta semana: 3</li>
+            <li>Solicitudes pendientes: 4</li>
+            <li>Talleres activos hoy: 5</li>
+            <li>Tiempo promedio de atención: 22 min</li>
+          </ul>
+        </section>
+      </div>
     </section>
+
+    <section *ngIf="selectedMenu === 'usuarios'">
+  <div class="usuarios-header">
+    <div>
+      <h1>Gestión de Usuarios</h1>
+      <p>Administra los usuarios del sistema</p>
+    </div>
+
+    <button class="btn-new-user" (click)="nuevoUsuario()">
+      + Nuevo Usuario
+    </button>
+  </div>
+
+  <div class="users-stats-grid">
+    <div class="user-stat-card stat-blue">
+      <p>Total Usuarios</p>
+      <h3>{{ totalUsuariosSistema }}</h3>
+    </div>
+
+    <div class="user-stat-card stat-purple">
+      <p>Talleres</p>
+      <h3>{{ totalTalleresSistema }}</h3>
+    </div>
+
+    <div class="user-stat-card stat-green">
+      <p>Activos</p>
+      <h3>{{ totalUsuariosActivos }}</h3>
+    </div>
+  </div>
+
+  <section class="table-box users-panel-box">
+    <div class="users-filters">
+      <div class="users-search">
+        <input
+          type="text"
+          [(ngModel)]="filtrosUsuarios.busqueda"
+          placeholder="Buscar por nombre o email..."
+        />
+      </div>
+
+      <div class="users-role-filter">
+        <select [(ngModel)]="filtrosUsuarios.rol">
+          <option value="">Todos los roles</option>
+          <option value="Taller">Taller</option>
+          <option value="Cliente">Cliente</option>
+          <option value="Administrador">Administrador</option>
+        </select>
+      </div>
+
+      <button class="btn-outline" (click)="limpiarFiltrosUsuarios()">
+        Limpiar
+      </button>
+    </div>
+  </section>
+
+  <section class="table-box users-list-box">
+    <div class="users-list-title">
+      <h2>Lista de Usuarios ({{ usuariosFiltrados.length }})</h2>
+    </div>
+
+    <div class="user-card" *ngFor="let usuario of usuariosFiltrados">
+      <div class="user-avatar">
+        {{ usuario.inicial }}
+      </div>
+
+      <div class="user-content">
+        <div class="user-top-row">
+          <div class="user-name-row">
+            <h3>{{ usuario.nombre }}</h3>
+            <span [class]="getRolClase(usuario.rol)">
+              {{ usuario.rol }}
+            </span>
+            <span [class]="getEstadoUsuarioClase(usuario.estado)">
+              {{ usuario.estado }}
+            </span>
+          </div>
+
+          <button class="user-options-btn" (click)="verOpcionesUsuario(usuario)">
+            ⋮
+          </button>
+        </div>
+
+        <div class="user-contact-row">
+          <span>{{ usuario.email }}</span>
+          <span>{{ usuario.telefono }}</span>
+        </div>
+
+        <div class="user-meta-row">
+           <span>Último acceso: {{ usuario.ultimoAcceso ? (usuario.ultimoAcceso | date:'yyyy-MM-dd HH:mm') : 'Sin acceso' }}</span>
+           <span>Creado: {{ usuario.creado ? (usuario.creado | date:'yyyy-MM-dd') : 'Sin fecha' }}</span>
+        </div>
+      </div>
+    </div>
+  </section>
+</section>
+
+
 
     <section *ngIf="selectedMenu === 'perfil'">
       <div class="page-header">
@@ -96,7 +399,7 @@
 
       <section class="table-box perfil-box">
         <div class="perfil-header">
-          <div class="perfil-avatar">A</div>
+          <div class="perfil-avatar">{{ admin.nombre.charAt(0).toUpperCase() }}</div>
 
           <div class="perfil-grid">
             <div>
@@ -171,5 +474,67 @@
         <button class="btn-danger">Cambiar Contraseña</button>
       </section>
     </section>
+
+
+      <div class="support-chat-window" *ngIf="soporteAbierto">
+  <div class="support-chat-header">
+    <div>
+      <strong>Asistente IA</strong>
+      <p>Soporte del panel administrativo</p>
+    </div>
+
+    <button class="support-close-btn" (click)="cerrarSoporteGlobal()">✕</button>
+  </div>
+
+  <div class="support-chat-messages">
+    <div
+      class="support-message"
+      *ngFor="let msg of mensajesSoporte"
+      [class.from-admin]="msg.autor === 'admin'"
+      [class.from-ia]="msg.autor === 'ia'">
+
+      <div class="support-message-bubble">
+        <p>{{ msg.contenido }}</p>
+        <small>{{ msg.hora }}</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="support-chat-actions">
+    <label class="support-icon-btn">
+      🖼️
+      <input type="file" accept="image/*" (change)="onImagenSoporteSeleccionada($event)" hidden />
+    </label>
+
+    <button
+      class="support-icon-btn"
+      [class.recording]="grabandoAudio"
+      (click)="toggleAudioSoporte()">
+      🎤
+    </button>
+  </div>
+
+  <div class="support-chat-input">
+    <input
+      type="text"
+      [(ngModel)]="mensajeSoporte"
+      placeholder="Escribe tu consulta..."
+      (keyup.enter)="enviarMensajeSoporte()"
+    />
+    <button (click)="enviarMensajeSoporte()">Enviar</button>
+  </div>
+</div>
+
+
+
+
+
   </main>
+   
+
+
+
+
+
+
 </div>
