@@ -34,7 +34,7 @@ export interface RegisterTallerPayload {
 export class AuthService {
   private http = inject(HttpClient);
 
-  private readonly baseUrl = 'http://127.0.0.1:8000/api';
+  private readonly baseUrl = 'http://18.223.2.124:8000/api';
   private readonly loginUrl = `${this.baseUrl}/auth/login`;
   private readonly registerUrl = `${this.baseUrl}/auth/register-taller`;
 

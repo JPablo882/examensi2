@@ -43,7 +43,7 @@ export interface UsuarioAdmin {
 })
 export class PanelAdminService {
   private http = inject(HttpClient);
-  private readonly baseUrl = 'http://127.0.0.1:8000/api';
+  private readonly baseUrl = 'http://18.223.2.124:8000/api';
 
   obtenerResumenDashboard(): Observable<DashboardAdminResumen> {
     return this.http.get<DashboardAdminResumen>(

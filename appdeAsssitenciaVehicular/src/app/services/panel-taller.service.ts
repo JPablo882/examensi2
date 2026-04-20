@@ -36,7 +36,7 @@ export interface DashboardTallerResumen {
 })
 export class PanelTallerService {
   private http = inject(HttpClient);
-  private readonly baseUrl = 'http://127.0.0.1:8000/api';
+  private readonly baseUrl = 'http://18.223.2.124:8000/api';
 
   obtenerSolicitudesActivas(tallerEmail: string): Observable<SolicitudActiva[]> {
     return this.http.get<SolicitudActiva[]>(
