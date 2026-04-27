@@ -45,3 +45,63 @@ def obtener_solicitudes_recientes(db: Session = Depends(get_db)):
         })
 
     return resultado
+
+# 🔥 NUEVO ENDPOINT: Detalle de una solicitud específica
+@router.get("/{solicitud_id}")
+def obtener_detalle_solicitud(solicitud_id: int, db: Session = Depends(get_db)):
+    servicio = (
+        db.query(Servicio)
+        .options(
+            joinedload(Servicio.taller),
+            joinedload(Servicio.tecnico),
+            joinedload(Servicio.incidente).joinedload(Incidente.usuario),
+            joinedload(Servicio.incidente).joinedload(Incidente.vehiculo),
+            joinedload(Servicio.pago)
+        )
+        .filter(Servicio.id == solicitud_id)
+        .first()
+    )
+    
+    if not servicio:
+        raise HTTPException(status_code=404, detail="Solicitud no encontrada")
+    
+    incidente = servicio.incidente
+    
+    # Obtener datos del cliente
+    usuario_nombre = "Sin cliente"
+    if incidente and incidente.usuario:
+        usuario_nombre = incidente.usuario.nombre
+    
+    # Obtener datos del técnico
+    tecnico_nombre = "Sin asignar"
+    if servicio.tecnico:
+        tecnico_nombre = servicio.tecnico.nombre
+    
+    # Obtener datos del taller
+    taller_nombre = "Sin taller"
+    if servicio.taller:
+        taller_nombre = servicio.taller.nombre_taller
+    
+    # Obtener datos del pago
+    monto = 0
+    if servicio.pago:
+        monto = float(servicio.pago.monto)
+    
+    # Obtener datos del vehículo
+    vehiculo_texto = "Sin vehículo"
+    if incidente and incidente.vehiculo:
+        v = incidente.vehiculo
+        vehiculo_texto = f"{v.marca} {v.modelo} - {v.placa}"
+    
+    return {
+        "id": servicio.id,
+        "servicio": incidente.tipo_problema if incidente else "N/A",
+        "usuario": usuario_nombre,
+        "taller": taller_nombre,
+        "tecnico": tecnico_nombre,
+        "monto": monto,
+        "estado": servicio.estado,
+        "ubicacion": incidente.ubicacion if incidente else "",
+        "descripcion": incidente.descripcion if incidente else "",
+        "vehiculo": vehiculo_texto
+    }

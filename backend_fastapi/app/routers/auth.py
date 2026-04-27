@@ -53,6 +53,31 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Esta cuenta no tiene acceso de taller."
             )
+            
+    # 🔥 BUSCAR EL TALLER ASOCIADO AL USUARIO
+        taller = db.query(Taller).filter(Taller.usuario_id == user.id).first()
+        
+        if not taller:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Taller no encontrado para este usuario."
+            )
+        
+        return {
+        "message": "Login correcto",
+        "user": {
+            "id": user.id,
+            "nombre": user.nombre,
+            "email": user.email,
+            "telefono": user.telefono,
+            "rol": user.rol.nombre,
+          },
+           "taller": {  # 🔥 AGREGAR ESTO
+            "id": taller.id if taller else None,
+            "nombre_taller": taller.nombre_taller if taller else None,
+            "email": taller.email if taller else None
+          }
+        }
 
     elif access_type == "cliente":
         if rol_nombre != "cliente":

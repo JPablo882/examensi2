@@ -19,6 +19,13 @@ from app.routers.dashboard_admin import router as dashboard_admin_router
 from app.routers.admin_solicitudes import router as admin_solicitudes_router
 from app.routers.admin_usuarios import router as admin_usuarios_router
 from app.routers.dashboard_taller import router as dashboard_taller_router
+from app.routers.perfil_taller import router as perfil_taller_router
+from app.routers.password_reset import router as password_reset_router
+from app.routers.montos_taller import router as montos_taller_router
+from app.routers.notificaciones_taller import router as notificaciones_router
+from app.routers.admin_perfil import router as admin_perfil_router
+from app.routers.asistente_ia import router as asistente_router
+from app.routers.reportes import router as reportes_router    
 
 app = FastAPI(title="EmergAuto FastAPI")
 
@@ -52,6 +59,14 @@ app.include_router(dashboard_admin_router)
 app.include_router(admin_solicitudes_router)
 app.include_router(admin_usuarios_router)
 app.include_router(dashboard_taller_router)
+app.include_router(perfil_taller_router)
+app.include_router(password_reset_router)
+app.include_router(montos_taller_router)
+app.include_router(notificaciones_router)
+app.include_router(admin_perfil_router)
+app.include_router(asistente_router)
+app.include_router(reportes_router)
+
 
 @app.get("/")
 def root():

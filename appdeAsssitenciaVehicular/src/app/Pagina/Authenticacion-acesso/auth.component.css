@@ -324,3 +324,219 @@
     font-size: 40px;
   }
 }
+
+/* Modal Recuperar Contraseña */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(4px);
+}
+
+.modal-container {
+  background: white;
+  border-radius: 24px;
+  width: 90%;
+  max-width: 480px;
+  overflow: hidden;
+  animation: modalFadeIn 0.3s ease;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  background: #ff6200;
+  color: white;
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 28px;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.3s;
+}
+
+.modal-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.modal-body {
+  padding: 28px 24px;
+}
+
+.modal-description {
+  color: #4a5b7b;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #0f2347;
+  font-size: 14px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  font-size: 15px;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  box-sizing: border-box;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #ff6200;
+  box-shadow: 0 0 0 3px rgba(255, 98, 0, 0.1);
+}
+
+.modal-footer {
+  padding: 0 24px 24px 24px;
+}
+
+.btn-recuperar {
+  width: 100%;
+  background: #ff6200;
+  color: white;
+  border: none;
+  padding: 14px 20px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.btn-recuperar:hover {
+  background: #e05500;
+}
+
+.btn-recuperar:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.modal-footer-link {
+  padding: 0 24px 28px 24px;
+  text-align: center;
+}
+
+.modal-footer-link p {
+  margin: 0;
+  color: #4a5b7b;
+  font-size: 14px;
+}
+
+.link-register {
+  color: #ff6200;
+  text-decoration: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.link-register:hover {
+  text-decoration: underline;
+}
+
+/* Temporizador de bloqueo */
+.bloqueo-timer {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 16px;
+  padding: 20px;
+  text-align: center;
+  margin-bottom: 20px;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.8; }
+  100% { opacity: 1; }
+}
+
+.timer-circle {
+  width: 80px;
+  height: 80px;
+  background: #dc2626;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 15px;
+  color: white;
+}
+
+.timer-seconds {
+  font-size: 32px;
+  font-weight: 800;
+}
+
+.timer-label {
+  font-size: 12px;
+}
+
+.timer-bar {
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  margin-top: 15px;
+  overflow: hidden;
+}
+
+.timer-progress {
+  height: 100%;
+  background: #dc2626;
+  border-radius: 4px;
+  transition: width 1s linear;
+}
+
+.bloqueo-timer p {
+  margin: 5px 0;
+  color: #856404;
+}

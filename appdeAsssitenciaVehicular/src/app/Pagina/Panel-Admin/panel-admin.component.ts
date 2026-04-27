@@ -10,6 +10,7 @@ import {
   SolicitudAdminReciente,
   UsuarioAdmin
 } from '../../services/panel-admin.service';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-panel-admin',
@@ -20,6 +21,7 @@ import {
 })
 export class PanelAdminComponent implements OnInit {
   private panelAdminService = inject(PanelAdminService);
+  private http = inject(HttpClient);
 
   admin = {
     nombre: 'admin',
@@ -28,6 +30,17 @@ export class PanelAdminComponent implements OnInit {
 
   selectedMenu = 'dashboard';
   isBrowser = false;
+
+  //variables para reportes pagos
+  //Pagos
+  reportePagos: any[]=[];
+  cargandoReporte: boolean = false;
+  modalReporteAbierto: boolean = false;
+ // servicios
+ reporteServicios: any[] = [];
+ cargandoReporteServicios: boolean = false;
+ modalServiciosAbierto: boolean = false;
+
 
   dashboardCards = {
     usuariosTotales: 0,
@@ -155,6 +168,17 @@ export class PanelAdminComponent implements OnInit {
   mensajeSoporte = '';
   grabandoAudio = false;
 
+  // Agrega estas variables
+mostrarModalEditarPerfil: boolean = false;
+guardandoPerfil: boolean = false;
+perfilEditado = {
+  nombre: '',
+  apellidos: '',
+  telefono: '',
+  direccion: '',
+  ciudad: ''
+};
+
   mensajesSoporte = [
     {
       autor: 'ia',
@@ -163,6 +187,10 @@ export class PanelAdminComponent implements OnInit {
       hora: 'Ahora'
     }
   ];
+
+// Variables
+mostrarModalDetalle: boolean = false;
+solicitudDetalle: any = null;
 
   constructor(
     private router: Router,
@@ -194,7 +222,399 @@ export class PanelAdminComponent implements OnInit {
     this.cargarResumenDashboard();
     this.cargarSolicitudesRecientes();
     this.cargarUsuariosSistema();
+    this.cargarPerfilAdmin();
   }
+
+   // Cargar reporte de pagos desde FastAPI
+  cargarReportePagos(): void {
+    this.cargandoReporte = true;
+    this.panelAdminService.obtenerReportePagos().subscribe({
+      next: (resp) => {
+        this.reportePagos = resp;
+        this.cargandoReporte = false;
+        console.log('✅ Reporte de pagos:', this.reportePagos);
+      },
+      error: (error) => {
+        console.error('❌ Error:', error);
+        alert('Error al cargar el reporte de pagos');
+        this.cargandoReporte = false;
+      }
+    });
+  }
+
+  // Exportar a PDF (imprimir)
+  exportarPDF(): void {
+    if (this.reportePagos.length === 0) {
+      alert('⚠️ No hay datos para exportar');
+      return;
+    }
+    const contenido = this.generarHTMLReporte();
+    const ventana = window.open();
+    ventana?.document.write(contenido);
+    ventana?.document.close();
+    ventana?.print();
+  }
+
+  // Exportar a Excel (CSV)
+  exportarExcel(): void {
+    if (this.reportePagos.length === 0) {
+      alert('⚠️ No hay datos para exportar');
+      return;
+    }
+
+    let csv = "ID,Servicio ID,Monto,Comisión,Estado,Fecha\n";
+    
+    this.reportePagos.forEach(p => {
+      csv += `${p.id},${p.servicio_id},${p.monto},${p.comision},${p.estado},${p.fecha}\n`;
+    });
+    
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `reporte_pagos_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    alert('✅ Reporte exportado a Excel');
+  }
+
+  // Exportar a HTML
+  exportarHTML(): void {
+    if (this.reportePagos.length === 0) {
+      alert('⚠️ No hay datos para exportar');
+      return;
+    }
+
+    const contenido = this.generarHTMLReporte();
+    const blob = new Blob([contenido], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `reporte_pagos_${new Date().toISOString().split('T')[0]}.html`;
+    a.click();
+    URL.revokeObjectURL(url);
+    alert('✅ Reporte exportado a HTML');
+  }
+
+
+  // Generar HTML para reporte - VERSIÓN CORREGIDA
+generarHTMLReporte(): string {
+  // Crear las filas de la tabla como string
+  const filasTabla = this.reportePagos.map(p => `
+    <tr>
+      <td>${p.id}</td>
+      <td>${p.servicio_id}</td>
+      <td>Bs ${p.monto}</td>
+      <td>Bs ${p.comision}</td>
+      <td>${p.estado}</td>
+      <td>${p.fecha}</td>
+    </tr>
+  `).join('');
+  
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Reporte de Pagos - EmergAuto</title>
+      <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        h1 { color: #ff6200; text-align: center; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background: #ff6200; color: white; }
+        .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #666; }
+        .total { margin-top: 20px; font-weight: bold; text-align: right; }
+      </style>
+    </head>
+    <body>
+      <h1>📊 Reporte de Pagos - EmergAuto</h1>
+      <p>Fecha de generación: ${new Date().toLocaleString()}</p>
+      <p>Total de pagos: ${this.reportePagos.length}</p>
+      
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Servicio ID</th>
+            <th>Monto (Bs)</th>
+            <th>Comisión (Bs)</th>
+            <th>Estado</th>
+            <th>Fecha</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${filasTabla}
+        </tbody>
+      </table>
+      
+      <div class="total">
+        <p>💰 Total recaudado: Bs ${this.calcularTotal()}</p>
+      </div>
+      
+      <div class="footer">
+        <p>EmergAuto - Sistema de Asistencia Vehicular</p>
+        <p>© ${new Date().getFullYear()} - Todos los derechos reservados</p>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+ 
+  // Calcular total recaudado
+calcularTotal(): number {
+  return this.reportePagos.reduce((total, p) => total + (p.monto || 0), 0);
+}
+
+// Abrir modal de reporte
+abrirModalReporte(): void {
+  this.modalReporteAbierto = true;
+  // Opcional: cargar datos automáticamente al abrir
+  // this.cargarReportePagos();
+}
+
+
+
+// Cerrar modal
+cerrarModalReporte(): void {
+  this.modalReporteAbierto = false;
+}
+
+// Para otros reportes
+abrirModalServicios(): void {
+  // Similar pero para servicios
+  this.modalServiciosAbierto = true;
+  // this.cargarReporteServicios();
+}
+
+// Cerrar modal de servicios
+cerrarModalServicios(): void {
+  this.modalServiciosAbierto = false;
+}
+
+// Cargar reporte de servicios desde FastAPI
+cargarReporteServicios(): void {
+  this.cargandoReporteServicios = true;
+  this.panelAdminService.obtenerReporteServicios().subscribe({
+    next: (resp) => {
+      this.reporteServicios = resp;
+      this.cargandoReporteServicios = false;
+      console.log('✅ Reporte de servicios:', this.reporteServicios);
+    },
+    error: (error) => {
+      console.error('❌ Error:', error);
+      alert('Error al cargar el reporte de servicios');
+      this.cargandoReporteServicios = false;
+    }
+  });
+}
+
+// Exportar Servicios a PDF
+exportarServiciosPDF(): void {
+  if (this.reporteServicios.length === 0) {
+    alert('⚠️ No hay datos para exportar');
+    return;
+  }
+  const contenido = this.generarHTMLReporteServicios();
+  const ventana = window.open();
+  ventana?.document.write(contenido);
+  ventana?.document.close();
+  ventana?.print();
+}
+
+// Exportar Servicios a Excel (CSV)
+exportarServiciosExcel(): void {
+  if (this.reporteServicios.length === 0) {
+    alert('⚠️ No hay datos para exportar');
+    return;
+  }
+
+  let csv = "ID,Taller ID,Incidente ID,Estado,Tiempo Estimado,Inicio,Fin\n";
+  
+  this.reporteServicios.forEach(s => {
+    csv += `${s.id},${s.taller_id},${s.incidente_id},${s.estado},${s.tiempo_estimado},${s.inicio},${s.fin}\n`;
+  });
+  
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `reporte_servicios_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  alert('✅ Reporte de servicios exportado a Excel');
+}
+
+// Exportar Servicios a HTML
+exportarServiciosHTML(): void {
+  if (this.reporteServicios.length === 0) {
+    alert('⚠️ No hay datos para exportar');
+    return;
+  }
+
+  const contenido = this.generarHTMLReporteServicios();
+  const blob = new Blob([contenido], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `reporte_servicios_${new Date().toISOString().split('T')[0]}.html`;
+  a.click();
+  URL.revokeObjectURL(url);
+  alert('✅ Reporte de servicios exportado a HTML');
+}
+
+// Generar HTML para reporte de servicios
+generarHTMLReporteServicios(): string {
+  const filasTabla = this.reporteServicios.map(s => `
+    <tr>
+      <td>${s.id}</td>
+      <td>${s.taller_id || '-'}</td>
+      <td>${s.incidente_id || '-'}</td>
+      <td>${s.estado || '-'}</td>
+      <td>${s.tiempo_estimado || '-'} min</td>
+      <td>${s.inicio || '-'}</td>
+      <td>${s.fin || '-'}</td>
+    </tr>
+  `).join('');
+  
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Reporte de Servicios - EmergAuto</title>
+      <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        h1 { color: #ff6200; text-align: center; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background: #ff6200; color: white; }
+        .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #666; }
+        .total { margin-top: 20px; font-weight: bold; text-align: right; }
+        .estado-pendiente { color: #ffc107; }
+        .estado-en-curso { color: #17a2b8; }
+        .estado-completado { color: #28a745; }
+      </style>
+    </head>
+    <body>
+      <h1>🔧 Reporte de Servicios - EmergAuto</h1>
+      <p>Fecha de generación: ${new Date().toLocaleString()}</p>
+      <p>Total de servicios: ${this.reporteServicios.length}</p>
+      
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Taller ID</th>
+            <th>Incidente ID</th>
+            <th>Estado</th>
+            <th>Tiempo Estimado</th>
+            <th>Inicio</th>
+            <th>Fin</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${filasTabla}
+        </tbody>
+      </table>
+      
+      <div class="total">
+        <p>⏱️ Tiempo total estimado: ${this.calcularTiempoTotalServicios()} minutos</p>
+        <p>✅ Servicios completados: ${this.contarServiciosPorEstado('completado')}</p>
+        <p>🟡 Servicios pendientes: ${this.contarServiciosPorEstado('pendiente')}</p>
+      </div>
+      
+      <div class="footer">
+        <p>EmergAuto - Sistema de Asistencia Vehicular</p>
+        <p>© ${new Date().getFullYear()} - Todos los derechos reservados</p>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+// Calcular tiempo total de servicios
+calcularTiempoTotalServicios(): number {
+  return this.reporteServicios.reduce((total, s) => total + (s.tiempo_estimado || 0), 0);
+}
+
+// Contar servicios por estado
+contarServiciosPorEstado(estado: string): number {
+  return this.reporteServicios.filter(s => s.estado?.toLowerCase() === estado.toLowerCase()).length;
+}
+
+// Formatear fecha para mostrar
+formatearFecha(fecha: string): string {
+  if (!fecha) return '-';
+  return new Date(fecha).toLocaleString();
+}
+
+
+
+// Cargar perfil
+cargarPerfilAdmin(): void {
+  this.panelAdminService.obtenerPerfilAdmin('dbanegas205@gmail.com').subscribe({
+    next: (resp) => {
+      this.adminPerfil = {
+        nombre: resp.nombre,
+        apellidos: resp.apellidos || '',
+        email: resp.email,
+        telefono: resp.telefono || '',
+        direccion: resp.direccion || 'Santa Cruz, Bolivia',
+        ciudad: resp.ciudad || 'Santa Cruz',
+        cargo: 'Administrador'
+      };
+      this.admin.nombre = resp.nombre;
+      this.admin.email = resp.email;
+    },
+    error: (error) => console.error('Error:', error)
+  });
+}
+
+cerrarModalEditarPerfil(): void {
+  this.mostrarModalEditarPerfil = false;
+  this.perfilEditado = { nombre: '', apellidos: '', telefono: '', direccion: '', ciudad: '' };
+  this.guardandoPerfil = false;
+}
+
+guardarCambiosPerfil(): void {
+  this.guardandoPerfil = true;
+  
+  const datos: any = {};
+  if (this.perfilEditado.nombre) datos.nombre = this.perfilEditado.nombre;
+  if (this.perfilEditado.apellidos) datos.apellidos = this.perfilEditado.apellidos;
+  if (this.perfilEditado.telefono) datos.telefono = this.perfilEditado.telefono;
+  if (this.perfilEditado.direccion) datos.direccion = this.perfilEditado.direccion;
+  if (this.perfilEditado.ciudad) datos.ciudad = this.perfilEditado.ciudad;
+  
+  if (Object.keys(datos).length === 0) {
+    alert('No se ingresaron cambios');
+    this.guardandoPerfil = false;
+    this.cerrarModalEditarPerfil();
+    return;
+  }
+  
+  this.panelAdminService.actualizarPerfilAdmin(datos).subscribe({
+    next: (resp) => {
+      alert('✅ Perfil actualizado correctamente');
+      this.cargarPerfilAdmin();
+      this.guardandoPerfil = false;
+      this.cerrarModalEditarPerfil();
+    },
+    error: (error) => {
+      alert('❌ Error al actualizar');
+      this.guardandoPerfil = false;
+    }
+  });
+}
+
+// Agrega este método (lo tienes comentado o no está)
+editarPerfil(): void {
+  console.log('Editar perfil clickeado');
+  this.perfilEditado = { nombre: '', apellidos: '', telefono: '', direccion: '', ciudad: '' };
+  this.mostrarModalEditarPerfil = true;
+}
 
   cargarResumenDashboard(): void {
     this.panelAdminService.obtenerResumenDashboard().subscribe({
@@ -371,6 +791,8 @@ export class PanelAdminComponent implements OnInit {
     }
   }
 
+ 
+
   getEstadoUsuarioClase(estado: string): string {
     switch (estado) {
       case 'Activo':
@@ -395,9 +817,29 @@ export class PanelAdminComponent implements OnInit {
     }
   }
 
+  /*
   verDetalle(solicitud: SolicitudAdminReciente): void {
     alert(`Viendo detalle de: ${solicitud.servicio}`);
-  }
+  }*/
+
+  verDetalle(solicitud: SolicitudAdminReciente): void {
+  this.panelAdminService.obtenerDetalleSolicitud(solicitud.id).subscribe({
+    next: (resp) => {
+      this.solicitudDetalle = resp;
+      this.mostrarModalDetalle = true;
+    },
+    error: (error) => {
+      console.error('Error:', error);
+      alert('No se pudo cargar el detalle');
+    }
+  });
+ }
+
+// Cerrar modal
+cerrarModalDetalle(): void {
+  this.mostrarModalDetalle = false;
+  this.solicitudDetalle = null;
+ }
 
   asignarTaller(solicitud: SolicitudAdminReciente): void {
     solicitud.taller = 'Taller asignado';
@@ -442,30 +884,42 @@ export class PanelAdminComponent implements OnInit {
     this.soporteAbierto = false;
   }
 
-  enviarMensajeSoporte(): void {
-    const texto = this.mensajeSoporte.trim();
-    if (!texto) return;
+enviarMensajeSoporte(): void {
+  const texto = this.mensajeSoporte.trim();
+  if (!texto) return;
 
-    this.mensajesSoporte.push({
-      autor: 'admin',
-      tipo: 'texto',
-      contenido: texto,
-      hora: 'Ahora'
-    });
+  // Mensaje del admin
+  this.mensajesSoporte.push({
+    autor: 'admin',
+    tipo: 'texto',
+    contenido: texto,
+    hora: 'Ahora'
+  });
 
-    const respuesta = this.generarRespuestaSoporte(texto);
+  this.mensajeSoporte = '';
 
-    setTimeout(() => {
+  // 🔥 LLAMAR AL BACKEND CORRECTAMENTE
+  this.panelAdminService.consultarAsistente(texto).subscribe({
+    next: (resp) => {
+      console.log('Respuesta del backend:', resp);
       this.mensajesSoporte.push({
         autor: 'ia',
         tipo: 'texto',
-        contenido: respuesta,
+        contenido: resp.respuesta,  // ← Asegura que sea resp.respuesta
         hora: 'Ahora'
       });
-    }, 500);
-
-    this.mensajeSoporte = '';
-  }
+    },
+    error: (error) => {
+      console.error('Error:', error);
+      this.mensajesSoporte.push({
+        autor: 'ia',
+        tipo: 'texto',
+        contenido: 'Lo siento, no pude procesar tu consulta en este momento.',
+        hora: 'Ahora'
+      });
+    }
+  });
+}
 
   onImagenSoporteSeleccionada(event: Event): void {
     const input = event.target as HTMLInputElement;

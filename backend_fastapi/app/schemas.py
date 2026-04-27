@@ -1,5 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
+from typing import Optional
 from pydantic import BaseModel, EmailStr
 
 
@@ -36,6 +37,7 @@ class UserResponse(BaseModel):
 class LoginResponse(BaseModel):
     message: str
     user: UserResponse
+    taller: Optional[dict] = None  # 🔥 AGREGAR
 
 
 class RegisterTallerRequest(BaseModel):
@@ -344,3 +346,23 @@ class RolPermisoCreate(RolPermisoBase):
 
 class RolPermisoResponse(RolPermisoBase):
     model_config = {"from_attributes": True}
+    
+# =========================
+# ACTUALIZAR ESTADO
+# =========================
+
+class ActualizarEstadoRequest(BaseModel):
+    """Modelo para actualizar el estado de un servicio"""
+    nuevo_estado: str
+
+class AsignarTecnicoRequest(BaseModel):
+    """Modelo para asignar técnico a un servicio"""
+    tecnico_id: int
+    
+# Agrega al final del archivo para recuperar contraseña
+class RecuperarPasswordRequest(BaseModel):
+    email: str
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    nueva_password: str

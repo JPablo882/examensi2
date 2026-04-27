@@ -10,29 +10,13 @@
       </div>
 
       <nav class="menu">
-        <a
-          (click)="setMenu('dashboard')"
-          [class.active]="selectedMenu === 'dashboard'">
-          Dashboard
-        </a>
-
-        <a
-          (click)="setMenu('solicitudes')"
-          [class.active]="selectedMenu === 'solicitudes'">
-          Solicitudes
-        </a>
-
-        <a
-          (click)="setMenu('historial')"
-          [class.active]="selectedMenu === 'historial'">
-          Historial
-        </a>
-
-        <a
-          (click)="mostrarPerfil()"
-          [class.active]="selectedMenu === 'perfil'">
-          Mi Perfil
-        </a>
+        <a (click)="setMenu('dashboard')" [class.active]="selectedMenu === 'dashboard'">Dashboard</a>
+        <a (click)="setMenu('solicitudes')" [class.active]="selectedMenu === 'solicitudes'">Solicitudes</a>
+        <a (click)="setMenu('historial')" [class.active]="selectedMenu === 'historial'">Historial</a>
+        <a (click)="setMenu('monto')" [class.active]="selectedMenu === 'monto'">Monto</a>
+        <a (click)="setMenu('billetera')" [class.active]="selectedMenu === 'billetera'">💳 Billetera</a>
+        <a (click)="setMenu('registrarTecnico')" [class.active]="selectedMenu === 'registrarTecnico'">👨‍🔧 Registrar Técnico</a>
+        <a (click)="mostrarPerfil()" [class.active]="selectedMenu === 'perfil'">Mi Perfil</a>
       </nav>
     </div>
 
@@ -44,507 +28,397 @@
           <p>{{ taller.email }}</p>
         </div>
       </div>
-
-      <button class="logout-btn" (click)="cerrarSesion()">
-        Cerrar sesión
-      </button>
+      <button class="logout-btn" (click)="cerrarSesion()">Cerrar sesión</button>
     </div>
   </aside>
 
   <main class="content">
     <div class="top-contact-bar">
-        <button class="top-notify-btn" type="button" aria-label="Notificaciones" (click)="toggleNotificaciones()">
-            <span class="notify-icon">🔔</span>
-            <span class="notify-dot"></span>
+      <div class="top-bar-left">
+        <button class="top-notify-btn" type="button" (click)="toggleNotificaciones()">
+          <span class="notify-icon">🔔</span>
+          <span class="notify-dot" *ngIf="notificaciones.length > 0"></span>
         </button>
-
         <div class="notifications-panel" *ngIf="mostrarNotificaciones">
           <div class="notifications-header">
             <h4>Notificaciones</h4>
             <span>{{ notificaciones.length }}</span>
           </div>
-
-          <div class="notification-item" *ngFor="let item of notificaciones">
-            <strong>{{ item.titulo }}</strong>
-            <p>{{ item.detalle }}</p>
-           <small>{{ item.tiempo }}</small>
+          <div class="notifications-list">
+            <div class="notification-item" *ngFor="let item of notificaciones.slice(0, 5)">
+              <div class="notification-icon">📋</div>
+              <div class="notification-content">
+                <strong>{{ item.titulo }}</strong>
+                <p>{{ item.detalle }}</p>
+                <small>{{ item.tiempo }}</small>
+              </div>
+            </div>
+            <div *ngIf="notificaciones.length > 3" class="notification-view-more" (click)="verTodasNotificaciones()">
+              <span>Ver todas ({{ notificaciones.length }})</span>
+            </div>
           </div>
         </div>
-        <a href="tel:900000000" class="top-contact-phone">900 000 000</a>
+      </div>
+      <a href="tel:900000000" class="top-contact-phone">📞 900 000 000</a>
     </div>
 
-        
+    <!-- DASHBOARD -->
     <section *ngIf="selectedMenu === 'dashboard'">
       <div class="topbar">
         <div>
           <h1>Bienvenido, {{ taller.nombre }}</h1>
           <p>Gestiona tus servicios y solicitudes asignadas</p>
         </div>
-
         <div class="topbar-right">
           <div class="status-toggle-wrap">
-            <span
-              class="status-label"
-              [class.active-text]="estadoTaller === 'Activo'"
-              [class.inactive-text]="estadoTaller === 'Inactivo'">
+            <span class="status-label" [class.active-text]="estadoTaller === 'Activo'" [class.inactive-text]="estadoTaller === 'Inactivo'">
               {{ estadoTaller === 'Activo' ? 'Taller activo' : 'Taller inactivo' }}
             </span>
-
-            <button
-              type="button"
-              class="status-toggle"
-              [class.active]="estadoTaller === 'Activo'"
-              [class.inactive]="estadoTaller === 'Inactivo'"
-              (click)="toggleEstadoTaller()"
-              aria-label="Cambiar estado del taller">
-              <span class="toggle-track">
-                <span class="toggle-thumb"></span>
-              </span>
+            <button type="button" class="status-toggle" [class.active]="estadoTaller === 'Activo'" [class.inactive]="estadoTaller === 'Inactivo'" (click)="toggleEstadoTaller()">
+              <span class="toggle-track"><span class="toggle-thumb"></span></span>
             </button>
           </div>
         </div>
       </div>
 
       <div class="cards charts-cards" *ngIf="isBrowser; else cardsSinGrafica">
-  <div class="card chart-card">
-    <div class="card-top">
-      <div>
-        <p class="card-title">Servicios Asignados</p>
-        <h3>{{ dashboardCards.serviciosAsignados }}</h3>
-        <span>+3 hoy</span>
-      </div>
-      <div class="icon-box">📋</div>
-    </div>
-
-    <div class="chart-box">
-      <canvas
-        baseChart
-        [data]="serviciosChartData"
-        [options]="dashboardChartOptions"
-        [type]="'bar'">
-      </canvas>
-    </div>
-  </div>
-
-  <div class="card chart-card">
-    <div class="card-top">
-      <div>
-        <p class="card-title">Servicios Completados</p>
-        <h3>{{ dashboardCards.serviciosCompletadosMes }}</h3>
-        <span>Este mes</span>
-      </div>
-      <div class="icon-box">✅</div>
-    </div>
-
-    <div class="chart-box">
-      <canvas
-        baseChart
-        [data]="completadosChartData"
-        [options]="dashboardChartOptions"
-        [type]="'bar'">
-      </canvas>
-    </div>
-  </div>
-
-  <div class="card chart-card">
-    <div class="card-top">
-      <div>
-        <p class="card-title">Servicios Activos</p>
-        <h3>{{ dashboardCards.serviciosActivos }}</h3>
-        <span>En proceso</span>
-      </div>
-      <div class="icon-box">🕒</div>
-    </div>
-
-    <div class="chart-box">
-      <canvas
-        baseChart
-        [data]="activosChartData"
-        [options]="lineChartOptions"
-        [type]="'line'">
-      </canvas>
-    </div>
-  </div>
-
-  <div class="card chart-card">
-    <div class="card-top">
-      <div>
-        <p class="card-title">Ingresos del Mes</p>
-        <h3>Bs {{ dashboardCards.ingresosMes | number:'1.0-2' }}</h3>
-        <span>Servicios realizados</span>
-      </div>
-      <div class="icon-box">💰</div>
-    </div>
-
-    <div class="chart-box">
-      <canvas
-        baseChart
-        [data]="ingresosChartData"
-        [options]="dashboardChartOptions"
-        [type]="'bar'">
-      </canvas>
-    </div>
-  </div>
-</div>
-
-<ng-template #cardsSinGrafica>
-  <div class="cards">
-    <div class="card" *ngFor="let item of resumen">
-      <div class="card-top">
-        <div>
-          <p class="card-title">{{ item.titulo }}</p>
-          <h3>{{ item.valor }}</h3>
-          <span>{{ item.detalle }}</span>
+        <div class="card chart-card">
+          <div class="card-top">
+            <div><p class="card-title">Servicios Asignados</p><h3>{{ dashboardCards.servicios_asignados }}</h3><span>Datos reales</span></div>
+            <div class="icon-box">📋</div>
+          </div>
+          <div class="chart-box"><canvas baseChart [data]="serviciosChartData" [options]="dashboardChartOptions" type="bar"></canvas></div>
         </div>
-        <div class="icon-box">{{ item.icono }}</div>
+        <div class="card chart-card">
+          <div class="card-top">
+            <div><p class="card-title">Servicios Completados</p><h3>{{ dashboardCards.servicios_completados_mes }}</h3><span>Este mes</span></div>
+            <div class="icon-box">✅</div>
+          </div>
+          <div class="chart-box"><canvas baseChart [data]="completadosChartData" [options]="dashboardChartOptions" type="bar"></canvas></div>
+        </div>
+        <div class="card chart-card">
+          <div class="card-top">
+            <div><p class="card-title">Servicios Activos</p><h3>{{ dashboardCards.servicios_activos }}</h3><span>En proceso</span></div>
+            <div class="icon-box">🕒</div>
+          </div>
+          <div class="chart-box"><canvas baseChart [data]="activosChartData" [options]="lineChartOptions" type="line"></canvas></div>
+        </div>
+        <div class="card chart-card">
+          <div class="card-top">
+            <div><p class="card-title">Ingresos del Mes</p><h3>Bs {{ dashboardCards.ingresos_mes | number:'1.0-2' }}</h3><span>Servicios realizados</span></div>
+            <div class="icon-box">💰</div>
+          </div>
+          <div class="chart-box"><canvas baseChart [data]="ingresosChartData" [options]="dashboardChartOptions" type="bar"></canvas></div>
+        </div>
       </div>
-    </div>
-  </div>
-</ng-template>
+
+      <ng-template #cardsSinGrafica>
+        <div class="cards"><div class="card" *ngFor="let item of resumen"><div class="card-top"><div><p class="card-title">{{ item.titulo }}</p><h3>{{ item.valor }}</h3><span>{{ item.detalle }}</span></div><div class="icon-box">{{ item.icono }}</div></div></div></div>
+      </ng-template>
 
       <section class="cta-box">
-        <div>
-          <h2>Servicios en tiempo real</h2>
-          <p>Administra rápidamente las solicitudes asignadas a tu taller.</p>
-        </div>
-
-        <div class="cta-actions">
-          <button class="btn-light" (click)="setMenu('solicitudes')">Ver solicitudes</button>
-          <button class="btn-white" (click)="mostrarPerfil()">Ver perfil</button>
-        </div>
+        <div><h2>Servicios en tiempo real</h2><p>Administra rápidamente las solicitudes asignadas a tu taller.</p></div>
+        <div class="cta-actions"><button class="btn-light" (click)="setMenu('solicitudes')">Ver solicitudes</button><button class="btn-white" (click)="mostrarPerfil()">Ver perfil</button></div>
       </section>
 
       <section class="table-box">
-        <div class="table-header">
-          <h2>Solicitudes activas</h2>
-        </div>
-
+        <div class="table-header"><h2>Solicitudes activas</h2></div>
         <div class="filtros-box">
-          <div class="filtro-group filtro-busqueda">
-            <label>Buscar</label>
-            <input
-              type="text"
-              [(ngModel)]="filtros.busqueda"
-              placeholder="Buscar por código, servicio, cliente o ubicación"
-            />
-          </div>
-
-          <div class="filtro-group">
-            <label>Estado</label>
-            <select [(ngModel)]="filtros.estado">
-              <option value="">Todos</option>
-              <option value="Pendiente">Pendiente</option>
-              <option value="Aceptada">Aceptada</option>
-              <option value="Asignado">Asignado</option>
-              <option value="En proceso">En proceso</option>
-              <option value="Finalizado">Finalizado</option>
-              <option value="Cerrado">Cerrado</option>
-            </select>
-          </div>
-
-          <div class="filtro-group">
-            <label>Prioridad</label>
-            <select [(ngModel)]="filtros.prioridad">
-              <option value="">Todas</option>
-              <option value="Alta">Alta</option>
-              <option value="Media">Media</option>
-              <option value="Baja">Baja</option>
-            </select>
-          </div>
-
-          <div class="filtro-group">
-            <label>Cliente</label>
-            <input
-              type="text"
-              [(ngModel)]="filtros.cliente"
-              placeholder="Filtrar por cliente"
-            />
-          </div>
-
-          <div class="filtro-group">
-            <label>Fecha</label>
-            <input
-              type="date"
-              [(ngModel)]="filtros.fecha"
-            />
-          </div>
-
-          <div class="filtro-group filtro-btn">
-            <label>&nbsp;</label>
-            <button class="btn-clear-filter" (click)="limpiarFiltros()">
-              Limpiar filtros
-            </button>
-          </div>
+          <div class="filtro-group filtro-busqueda"><label>Buscar</label><input type="text" [(ngModel)]="filtros.busqueda" placeholder="Buscar por código, servicio, cliente o ubicación"></div>
+          <div class="filtro-group"><label>Estado</label><select [(ngModel)]="filtros.estado"><option value="">Todos</option><option value="Pendiente">Pendiente</option><option value="Aceptada">Aceptada</option><option value="Asignado">Asignado</option><option value="En proceso">En proceso</option><option value="Finalizado">Finalizado</option><option value="Cerrado">Cerrado</option></select></div>
+          <div class="filtro-group"><label>Prioridad</label><select [(ngModel)]="filtros.prioridad"><option value="">Todas</option><option value="Alta">Alta</option><option value="Media">Media</option><option value="Baja">Baja</option></select></div>
+          <div class="filtro-group"><label>Cliente</label><input type="text" [(ngModel)]="filtros.cliente" placeholder="Filtrar por cliente"></div>
+          <div class="filtro-group"><label>Fecha</label><input type="date" [(ngModel)]="filtros.fecha"></div>
+          <div class="filtro-group filtro-btn"><label>&nbsp;</label><button class="btn-clear-filter" (click)="limpiarFiltros()">Limpiar filtros</button></div>
         </div>
-
         <table>
           <thead>
-            <tr>
-              <th>Código</th>
-              <th>Servicio</th>
-              <th>Cliente</th>
-              <th>Ubicación</th>
-              <th>Técnico</th>
-              <th>Estado</th>
-              <th>Prioridad</th>
-              <th>Fecha</th>
-            </tr>
+            <tr><th>Código</th><th>Servicio</th><th>Cliente</th><th>Ubicación</th><th>Técnico</th><th>Estado</th><th>Prioridad</th><th>Fecha</th></tr>
           </thead>
-
           <tbody>
             <tr *ngFor="let s of solicitudesFiltradas">
-              <td>{{ s.codigo }}</td>
-              <td>{{ s.servicio }}</td>
-              <td>{{ s.cliente }}</td>
-              <td>{{ s.ubicacion }}</td>
-              <td>{{ s.tecnico || 'Sin asignar' }}</td>
-              <td>{{ s.estado }}</td>
-              <td>{{ s.prioridad }}</td>
-              <td>{{ s.fecha }}</td>
+              <td>{{ s.codigo }}</td><td>{{ s.servicio }}</td><td>{{ s.cliente }}</td><td>{{ s.ubicacion }}</td><td>{{ s.tecnico || 'Sin asignar' }}</td><td>{{ s.estado }}</td><td>{{ s.prioridad }}</td><td>{{ s.fecha }}</td>
             </tr>
           </tbody>
         </table>
       </section>
 
       <div class="bottom-grid">
-        <section class="panel-box">
-          <h3>Acciones rápidas</h3>
-          <button>Asignar técnico</button>
-          <button>Actualizar estado</button>
-          <button>Registrar servicio</button>
-        </section>
-
-        <section class="panel-box">
-          <h3>Beneficios del taller</h3>
-          <ul>
-            <li>Mayor visibilidad para nuevos clientes</li>
-            <li>Gestión centralizada de solicitudes</li>
-            <li>Historial de servicios y control operativo</li>
-            <li>Seguimiento del desempeño mensual</li>
-          </ul>
-        </section>
+        <section class="panel-box"><h3>Acciones rápidas</h3><button (click)="abrirModalAsignacion()">Asignar técnico</button><button (click)="abrirModalActualizarEstado()">Actualizar estado</button><button (click)="abrirModalRegistroServicio()">Registrar servicio</button></section>
+        <section class="panel-box"><h3>Beneficios del taller</h3><ul><li>Mayor visibilidad para nuevos clientes</li><li>Gestión centralizada de solicitudes</li><li>Historial de servicios y control operativo</li><li>Seguimiento del desempeño mensual</li></ul></section>
       </div>
     </section>
 
-    <section *ngIf="selectedMenu === 'solicitudes'">
-      <div class="page-header solicitudes-header">
+   <!-- SOLICITUDES -->
+<section *ngIf="selectedMenu === 'solicitudes'">
+  <div class="page-header solicitudes-header">
+    <div>
+      <h1>Gestión de Solicitudes</h1>
+      <p>Administra, asigna y da seguimiento a los servicios del taller</p>
+    </div>
+    <button class="btn-dark-action" (click)="abrirModalRegistroServicio()">+ Registrar Servicio</button>
+  </div>
+
+  <div class="solicitudes-grid">
+    <article class="solicitud-card" *ngFor="let s of solicitudesActivas">
+      <div class="solicitud-top">
         <div>
-          <h1>Gestión de Solicitudes</h1>
-          <p>Administra, asigna y da seguimiento a los servicios del taller</p>
+          <h3>{{ s.codigo }}</h3>
+          <p class="solicitud-fecha">{{ s.fecha }}</p>
+        </div>
+        <div class="badges">
+          <span [class]="getPrioridadClase(s.prioridad)">{{ s.prioridad }}</span>
+          <span [class]="getEstadoClase(s.estado)">{{ s.estado }}</span>
+        </div>
+      </div>
+
+      <div class="solicitud-content">
+        <div class="solicitud-info">
+          <div class="info-item">
+            <span>Servicio</span>
+            <strong>{{ s.servicio }}</strong>
+          </div>
+          <div class="info-item">
+            <span>Técnico Asignado</span>
+            <strong>{{ s.tecnico || 'Sin asignar' }}</strong>
+          </div>
+          <div class="info-item">
+            <span>Cliente</span>
+            <strong>{{ s.cliente }}</strong>
+          </div>
+          <div class="info-item">
+            <span>Vehículo</span>
+            <strong>{{ s.vehiculo }}</strong>
+          </div>
         </div>
 
-        <button class="btn-dark-action">
-          + Registrar Servicio
-        </button>
+        <!-- Ubicación en el panel grande -->
+        <div class="tecnico-panel">
+          <h4>📍 Ubicación</h4>
+          <p><strong>{{ s.ubicacion || 'Sin ubicación' }}</strong></p>
+          <!-- Aquí después irá el mapa de Google Maps -->
+                <!-- Si es un link de Google Maps -->
+            <div *ngIf="s.ubicacion && s.ubicacion.includes('google')" class="mapa-container">
+              <iframe
+                 width="100%"
+                 height="250"
+                 style="border:0; border-radius: 12px;"
+                 loading="lazy"
+                 allowfullscreen
+                 [src]="s.ubicacion">
+               </iframe>
+               </div>
+                 <!-- Si es texto normal sin mapa-->
+                 <div *ngIf="s.ubicacion && !s.ubicacion.includes('google')" class="ubicacion-texto">
+                   <p><strong>{{ s.ubicacion }}</strong></p>
+                   <small>📍 Esta ubicación no tiene un enlace de mapa disponible</small>
+                 </div>
+
+               <div *ngIf="!s.ubicacion" class="sin-mapa">
+                  <p>📍 Ubicación no disponible</p>
+                </div>
+
+            </div>
       </div>
 
-      <div class="solicitudes-grid">
-        <article class="solicitud-card" *ngFor="let s of solicitudesActivas">
-          <div class="solicitud-top">
-            <div>
-              <h3>{{ s.codigo }}</h3>
-              <p class="solicitud-fecha">{{ s.fecha }}</p>
-            </div>
-
-            <div class="badges">
-              <span [class]="getPrioridadClase(s.prioridad)">
-                {{ s.prioridad }}
-              </span>
-              <span [class]="getEstadoClase(s.estado)">
-                {{ s.estado }}
-              </span>
-            </div>
-          </div>
-
-          <div class="solicitud-content">
-            <div class="solicitud-info">
-              <div class="info-item">
-                <span>Servicio</span>
-                <strong>{{ s.servicio }}</strong>
-              </div>
-
-              <div class="info-item">
-                <span>Cliente</span>
-                <strong>{{ s.cliente }}</strong>
-              </div>
-
-              <div class="info-item">
-                <span>Ubicación</span>
-                <strong>{{ s.ubicacion }}</strong>
-              </div>
-
-              <div class="info-item">
-                <span>Vehículo</span>
-                <strong>{{ s.vehiculo }}</strong>
-              </div>
-            </div>
-
-            <div class="tecnico-panel">
-              <h4>Técnico Asignado</h4>
-
-              <ng-container *ngIf="s.tecnico; else sinTecnico">
-                <p><strong>{{ s.tecnico }}</strong></p>
-                <p>📞 {{ s.telefonoTecnico }}</p>
-              </ng-container>
-
-              <ng-template #sinTecnico>
-                <p class="sin-tecnico">Aún no hay técnico asignado</p>
-              </ng-template>
-            </div>
-          </div>
-
-          <div class="solicitud-actions">
-            <button class="btn-action btn-accept" (click)="aceptarSolicitud(s)">
-              Aceptar solicitud
-            </button>
-
-            <button class="btn-action btn-assign" (click)="asignarTecnico(s)">
-              Asignar técnico
-            </button>
-
-            <button class="btn-action btn-update" (click)="actualizarEstado(s)">
-              Actualizar estado
-            </button>
-
-            <button class="btn-action btn-close" (click)="cerrarServicio(s)">
-              Cerrar servicio
-            </button>
-          </div>
-        </article>
+      <div class="solicitud-actions">
+        <button class="btn-action btn-accept" (click)="aceptarSolicitud(s)">Aceptar solicitud</button>
+        <button class="btn-action btn-assign" (click)="asignarTecnico(s)">Asignar técnico</button>
+        <button class="btn-action btn-update" (click)="abrirModalActualizarEstado(s)">Actualizar estado</button>
+        <button class="btn-action btn-close" (click)="cerrarServicio(s)">Cerrar servicio</button>
       </div>
-    </section>
+    </article>
+  </div>
+</section>
 
+    <!-- HISTORIAL -->
     <section *ngIf="selectedMenu === 'historial'">
-      <div class="page-header">
-        <h1>Historial de Servicios</h1>
-        <p>Resumen de servicios completados por el taller</p>
-      </div>
-
-      <section class="table-box">
-        <div class="table-header">
-          <h2>Historial registrado</h2>
-        </div>
-
+      <div class="page-header"><h1>Historial de Servicios</h1><p>Resumen de servicios completados por el taller</p></div>
+      <section class="table-box"><div class="table-header"><h2>Historial registrado</h2></div>
         <div class="filtros-box historial-filtros">
-          <div class="filtro-group filtro-busqueda">
-            <label>Buscar</label>
-            <input
-              type="text"
-              [(ngModel)]="filtrosHistorial.busqueda"
-              placeholder="Buscar por servicio, cliente o monto"
-            />
-          </div>
-
-          <div class="filtro-group">
-            <label>Estado</label>
-            <select [(ngModel)]="filtrosHistorial.estado">
-              <option value="">Todos</option>
-              <option value="Completado">Completado</option>
-              <option value="Finalizado">Finalizado</option>
-              <option value="Cerrado">Cerrado</option>
-            </select>
-          </div>
-
-          <div class="filtro-group">
-            <label>Cliente</label>
-            <input
-              type="text"
-              [(ngModel)]="filtrosHistorial.cliente"
-              placeholder="Filtrar por cliente"
-            />
-          </div>
-
-          <div class="filtro-group">
-            <label>Fecha</label>
-            <input
-              type="date"
-              [(ngModel)]="filtrosHistorial.fecha"
-            />
-          </div>
-
-          <div class="filtro-group filtro-btn">
-            <label>&nbsp;</label>
-            <button class="btn-clear-filter" (click)="limpiarFiltrosHistorial()">
-              Limpiar filtros
-            </button>
-          </div>
+          <div class="filtro-group filtro-busqueda"><label>Buscar</label><input type="text" [(ngModel)]="filtrosHistorial.busqueda" placeholder="Buscar por servicio, cliente o monto"></div>
+          <div class="filtro-group"><label>Estado</label><select [(ngModel)]="filtrosHistorial.estado"><option value="">Todos</option><option value="Completado">Completado</option><option value="Finalizado">Finalizado</option><option value="Cerrado">Cerrado</option></select></div>
+          <div class="filtro-group"><label>Cliente</label><input type="text" [(ngModel)]="filtrosHistorial.cliente" placeholder="Filtrar por cliente"></div>
+          <div class="filtro-group"><label>Fecha</label><input type="date" [(ngModel)]="filtrosHistorial.fecha"></div>
+          <div class="filtro-group filtro-btn"><label>&nbsp;</label><button class="btn-clear-filter" (click)="limpiarFiltrosHistorial()">Limpiar filtros</button></div>
         </div>
-
         <table>
-          <thead>
-            <tr>
-              <th>Servicio</th>
-              <th>Cliente</th>
-              <th>Estado</th>
-              <th>Monto</th>
-              <th>Fecha</th>
-            </tr>
-          </thead>
-
+          <thead><tr><th>Servicio</th><th>Cliente</th><th>Estado</th><th>Monto</th><th>Fecha</th></tr></thead>
           <tbody>
-            <tr *ngFor="let h of historialFiltrado">
-              <td>{{ h.servicio }}</td>
-              <td>{{ h.cliente }}</td>
-              <td>{{ h.estado }}</td>
-              <td>{{ h.monto }}</td>
-              <td>{{ h.fecha }}</td>
-            </tr>
+            <tr *ngFor="let h of historialFiltrado"><td>{{ h.servicio }}</td><td>{{ h.cliente }}</td><td>{{ h.estado }}</td><td>Bs {{ h.monto | number:'1.0-2' }}</td><td>{{ h.fecha }}</td></tr>
+            <tr *ngIf="historialFiltrado.length === 0"><td colspan="5">No hay registros</td></tr>
           </tbody>
         </table>
       </section>
     </section>
 
-    <section *ngIf="selectedMenu === 'perfil'">
-      <div class="page-header">
-        <h1>Perfil del Taller</h1>
-        <p>Información principal del taller registrado</p>
+    <!-- MONTO -->
+    <section *ngIf="selectedMenu === 'monto'">
+      <div class="page-header"><h1>💰 Gestión de Montos</h1><p>Resumen de ingresos y pagos del taller</p></div>
+      <div class="cards">
+        <div class="card"><div class="card-top"><div><p class="card-title">Ingresos Totales</p><h3>Bs {{ ingresosTotales | number:'1.2-2' }}</h3><span>Servicios finalizados</span></div><div class="icon-box">💰</div></div></div>
+        <div class="card"><div class="card-top"><div><p class="card-title">Comisiones</p><h3>Bs {{ comisionesTotales | number:'1.2-2' }}</h3><span>Plataforma (10%)</span></div><div class="icon-box">📊</div></div></div>
+        <div class="card"><div class="card-top"><div><p class="card-title">Neto a Recibir</p><h3>Bs {{ netoRecibir | number:'1.2-2' }}</h3><span>Ingresos - Comisiones</span></div><div class="icon-box">✅</div></div></div>
       </div>
+      <section class="table-box">
+        <div class="table-header">
+        <h2>Historial de Pagos</h2>
+           <button class="btn-refresh" (click)="cargarMontos()">🔄 Actualizar</button>
+       </div>
+        <table>
+          <thead><tr><th>Servicio</th><th>Cliente</th><th>Monto</th><th>Comisión</th><th>Estado</th><th>Fecha</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let pago of pagosHistorial"><td>{{ pago.servicio }}</td><td>{{ pago.cliente }}</td><td>Bs {{ pago.monto | number:'1.2-2' }}</td><td>Bs {{ pago.comision | number:'1.2-2' }}</td><td><span class="estado-pago" [class.pagado]="pago.estado === 'pagado'">{{ pago.estado }}</span></td><td>{{ pago.fecha | date:'yyyy-MM-dd' }}</td></tr>
+            <tr *ngIf="pagosHistorial.length === 0"><td colspan="6">No hay pagos registrados</td></tr>
+          </tbody>
+        </table>
+      </section>
+    </section>
 
+    <!-- BILLETERA -->
+    <section *ngIf="selectedMenu === 'billetera'">
+      <div class="page-header"><h1>💳 Mi Billetera</h1><p>Gestiona tu saldo y realiza recargas</p></div>
+      <div class="wallet-container">
+        <div class="wallet-card"><div class="wallet-balance"><span class="balance-label">Saldo disponible</span><div class="balance-amount">Bs {{ saldoBilletera | number:'1.2-2' }}</div><span class="balance-bonos">{{ bonos }} bonos</span></div><button class="btn-recargar" (click)="abrirModalRecarga()">📱 Recargar</button></div>
+        <div class="payment-methods"><h3>Métodos de pago</h3><div class="method-card"><div class="method-icon">💳</div><div class="method-info"><strong>VISA • 5920</strong><p>Método de pago principal</p></div><button class="method-edit">✎</button></div><button class="add-method">+ Agregar método de pago</button></div>
+      </div>
+      <section class="table-box"><div class="table-header"><h2>Historial de transacciones</h2></div>
+        <table>
+          <thead><tr><th>Fecha</th><th>Descripción</th><th>Monto</th><th>Estado</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let t of historialTransacciones"><td>{{ t.fecha }}</td><td>{{ t.descripcion }}</td><td [class.ingreso]="t.tipo === 'ingreso'" [class.egreso]="t.tipo === 'egreso'">{{ t.tipo === 'ingreso' ? '+' : '-' }} Bs {{ t.monto | number:'1.2-2' }}</td><td><span class="estado-transaccion" [class.completado]="t.estado === 'completado'">{{ t.estado }}</span></td></tr>
+            <tr *ngIf="historialTransacciones.length === 0"><td colspan="4">No hay transacciones registradas</td></tr>
+          </tbody>
+        </table>
+      </section>
+    </section>
+
+
+<!-- SECCIÓN REGISTRAR TÉCNICO -->
+<section *ngIf="selectedMenu === 'registrarTecnico'">
+  <div class="page-header">
+    <h1>👨‍🔧 Registrar Técnico</h1>
+    <p>Agrega y gestiona los técnicos de tu taller</p>
+  </div>
+
+  <!-- Formulario para registrar -->
+  <div class="form-card">
+    <div class="form-group">
+      <label>📝 Nombre del técnico</label>
+      <input type="text" class="form-control" [(ngModel)]="nombreTecnico" placeholder="Ej: Juan Pérez">
+    </div>
+    <button class="btn-registrar" (click)="registrarTecnico()" [disabled]="!nombreTecnico">
+      {{ registrando ? 'Registrando...' : '+ Registrar Técnico' }}
+    </button>
+  </div>
+
+  <!-- Lista de técnicos con botón de cambio de estado para CADA UNO -->
+  <!-- Lista de técnicos -->
+<div class="table-container">
+  <div class="table-header">
+    <h3>📋 Técnicos Registrados ({{ tecnicos.length }})</h3>
+    <button class="btn-refresh" (click)="cargarTecnicos()">🔄 Actualizar</button>
+  </div>
+  
+  <table class="table">
+    <thead>
+      <tr><th>Nombre</th><th>Estado</th><th>Acciones</th></tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let t of tecnicos">
+        <td>{{ t.nombre }}</td>
+        <td>
+              <button class="btn-estado" 
+               [class.disponible]="t.estado === 'disponible' || t.estado === 'activo'" 
+                [class.ocupado]="t.estado === 'ocupado' || t.estado === 'inactivo'"
+                (click)="cambiarEstado(t.id, t.estado)">
+                {{ (t.estado === 'disponible' || t.estado === 'activo') ? '✅ Disponible' : '🔴 Ocupado' }}
+             </button>
+        </td>
+        <td><button class="btn-delete" (click)="eliminarTecnico(t.id)">🗑️</button></td>
+      </tr>
+      <tr *ngIf="tecnicos.length === 0">
+        <td colspan="3">No hay técnicos registrados</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+</section>
+
+    <!-- PERFIL -->
+    <section *ngIf="selectedMenu === 'perfil'">
+      <div class="page-header"><h1>Perfil del Taller</h1><p>Información principal del taller registrado</p></div>
       <section class="table-box perfil-box">
-        <div class="perfil-header">
-          <div class="perfil-avatar">{{ taller.nombre.charAt(0).toUpperCase() }}</div>
-
+        <div class="perfil-header"><div class="perfil-avatar">{{ taller.nombre.charAt(0).toUpperCase() }}</div>
           <div class="perfil-grid">
-            <div>
-              <h4>Nombre del Taller</h4>
-              <p>{{ perfilTaller.nombre }}</p>
-            </div>
-
-            <div>
-              <h4>Encargado</h4>
-              <p>{{ perfilTaller.encargado }}</p>
-            </div>
-
-            <div>
-              <h4>Email</h4>
-              <p>{{ perfilTaller.email }}</p>
-            </div>
-
-            <div>
-              <h4>Teléfono</h4>
-              <p>{{ perfilTaller.telefono }}</p>
-            </div>
-
-            <div>
-              <h4>Dirección</h4>
-              <p>{{ perfilTaller.direccion }}</p>
-            </div>
-
-            <div>
-              <h4>Ciudad</h4>
-              <p>{{ perfilTaller.ciudad }}</p>
-            </div>
-
-            <div>
-              <h4>Especialidad</h4>
-              <p>{{ perfilTaller.especialidad }}</p>
-            </div>
+            <div><h4>Nombre del Taller</h4><p>{{ perfilTaller.nombre }}</p></div>
+            <div><h4>Encargado</h4><p>{{ perfilTaller.encargado }}</p></div>
+            <div><h4>Email</h4><p>{{ perfilTaller.email }}</p></div>
+            <div><h4>Teléfono</h4><p>{{ perfilTaller.telefono }}</p></div>
+            <div><h4>Dirección</h4><p>{{ perfilTaller.direccion }}</p></div>
+            <div><h4>Ciudad</h4><p>{{ perfilTaller.ciudad }}</p></div>
+            <div><h4>Especialidad</h4><p>{{ perfilTaller.especialidad }}</p></div>
           </div>
         </div>
-        <div class="perfil-actions">
-            <button class="btn-outline">Editar Perfil</button>
-        </div>
+        <div class="perfil-actions"><button class="btn-outline" (click)="editarPerfil()">Editar Perfil</button></div>
       </section>
     </section>
   </main>
+</div>
+
+<!-- MODALES -->
+<div class="modal-backdrop" *ngIf="mostrarModalAsignacion">
+  <div class="modal-box"><div class="modal-header"><h2>👨‍🔧 Asignar técnico</h2><button class="modal-close" (click)="cerrarModalAsignacion()">×</button></div>
+    <div class="modal-body"><div class="modal-group"><label>📋 Selecciona la solicitud</label><select [(ngModel)]="solicitudSeleccionadaId" class="form-control-modal"><option [ngValue]="null">-- Seleccionar solicitud --</option><option *ngFor="let s of solicitudesActivas" [ngValue]="s.id">{{ s.codigo }} - {{ s.servicio }} - {{ s.cliente }}</option></select></div>
+      <div class="modal-group"><label>🔧 Técnico disponible</label><select [(ngModel)]="tecnicoSeleccionadoId" class="form-control-modal"><option [ngValue]="null">-- Seleccionar técnico --</option><option *ngFor="let t of tecnicosDisponibles" [ngValue]="t.id">{{ t.nombre }}</option></select></div>
+      <div *ngIf="cargandoTecnicos" class="modal-preview">⏳ Cargando técnicos...</div>
+      <div *ngIf="!cargandoTecnicos && tecnicosDisponibles.length === 0" class="modal-preview">⚠️ No hay técnicos disponibles</div>
+    </div>
+    <div class="modal-actions"><button class="btn-outline" (click)="cerrarModalAsignacion()">Cancelar</button><button class="btn-dark-action" (click)="confirmarAsignacionTecnico()" [disabled]="guardandoAsignacion">{{ guardandoAsignacion ? 'Asignando...' : 'Asignar técnico' }}</button></div>
+  </div>
+</div>
+
+<div class="modal-backdrop" *ngIf="mostrarModalActualizarEstado">
+  <div class="modal-box"><div class="modal-header"><h2>Actualizar Estado del Servicio</h2><button class="modal-close" (click)="cerrarModalActualizarEstado()">×</button></div>
+    <div class="modal-body"><div *ngIf="servicioSeleccionado" class="servicio-info"><h3>{{ servicioSeleccionado.codigo }}</h3><p><strong>Servicio:</strong> {{ servicioSeleccionado.servicio }}</p><p><strong>Cliente:</strong> {{ servicioSeleccionado.cliente }}</p><p><strong>Ubicación:</strong> {{ servicioSeleccionado.ubicacion }}</p><p><strong>Estado actual:</strong> {{ servicioSeleccionado.estado }}</p><p><strong>Prioridad:</strong> {{ servicioSeleccionado.prioridad }}</p></div>
+      <div class="modal-group"><label>Nuevo estado</label><select [(ngModel)]="estadoSeleccionado" class="form-control-modal"><option value="pendiente">Pendiente</option><option value="aceptada">Aceptada</option><option value="asignado">Asignado</option><option value="en_proceso">En Proceso</option><option value="finalizado">Finalizado</option><option value="cerrado">Cerrado</option></select></div>
+    </div>
+    <div class="modal-actions"><button class="btn-outline" (click)="cerrarModalActualizarEstado()">Cancelar</button><button class="btn-dark-action" (click)="confirmarActualizarEstado()">Actualizar Estado</button></div>
+  </div>
+</div>
+
+<div class="modal-backdrop" *ngIf="mostrarModalRegistroServicio">
+  <div class="modal-box"><div class="modal-header"><h2>Registrar servicio</h2><button class="modal-close" (click)="cerrarModalRegistroServicio()">×</button></div>
+    <div class="modal-body"><div class="modal-group"><label>Selecciona un incidente disponible</label><select [(ngModel)]="registroServicio.incidente_id" class="form-control-modal"><option [ngValue]="null">Seleccionar incidente</option><option *ngFor="let i of incidentesDisponibles" [ngValue]="i.id">{{ i.servicio }} - {{ i.cliente }} - {{ i.ubicacion }}</option></select></div>
+      <div class="modal-group"><label>Tiempo estimado (minutos)</label><input type="number" min="1" class="form-control-modal" [(ngModel)]="registroServicio.tiempo_estimado" placeholder="Ejemplo: 30"></div>
+      <div *ngIf="cargandoIncidentes" class="modal-preview">⏳ Cargando incidentes...</div><div *ngIf="!cargandoIncidentes && incidentesDisponibles.length === 0" class="modal-preview">⚠️ No hay incidentes disponibles</div>
+    </div>
+    <div class="modal-actions"><button class="btn-outline" (click)="cerrarModalRegistroServicio()">Cancelar</button><button class="btn-dark-action" (click)="confirmarRegistroServicio()" [disabled]="guardandoServicio">{{ guardandoServicio ? 'Guardando...' : 'Registrar servicio' }}</button></div>
+  </div>
+</div>
+
+<div class="modal-backdrop" *ngIf="mostrarModalRecarga">
+  <div class="modal-box modal-recarga"><div class="modal-header orange-header"><h2>💸 Recargar saldo</h2><button class="modal-close" (click)="cerrarModalRecarga()">×</button></div>
+    <div class="modal-body"><div class="method-selected"><span>💳 VISA • 5920</span><a href="#" class="change-method">Cambiar</a></div>
+      <div class="amount-input"><label>Ingresa el monto</label><div class="input-wrapper"><span class="currency">Bs</span><input type="number" [(ngModel)]="montoRecarga" placeholder="30" min="10" step="10"></div></div>
+      <div class="amount-options"><button class="option-btn" [class.active]="montoRecarga === 30" (click)="setMontoRecarga(30)">30</button><button class="option-btn" [class.active]="montoRecarga === 60" (click)="setMontoRecarga(60)">60</button><button class="option-btn" [class.active]="montoRecarga === 90" (click)="setMontoRecarga(90)">90</button></div>
+      <p class="viajes-info">~{{ calcularViajes(montoRecarga) }} viajes aproximados</p>
+      <div class="recurring-option"><label class="checkbox"><input type="checkbox" [(ngModel)]="recargaRecurrente"><span>Recarga recurrente</span></label><p class="recurring-text">Recarga el saldo si es menor a Bs 0</p><div class="recurring-amount" *ngIf="recargaRecurrente"><span>Bs {{ montoRecarga || 30 }} • Activa</span></div></div>
+    </div>
+    <div class="modal-actions"><button class="btn-cancel" (click)="cerrarModalRecarga()">Cancelar</button><button class="btn-confirm" (click)="confirmarRecarga()" [disabled]="!montoRecarga || montoRecarga < 10">{{ recargando ? 'Procesando...' : 'Recargar de manera segura' }}</button></div>
+  </div>
+</div>
+
+<div class="modal-backdrop" *ngIf="mostrarModalEditarPerfil">
+  <div class="modal-box modal-editar-perfil">
+    <div class="modal-header orange-header"><div class="header-icon">✏️</div><h2>Editar Perfil</h2><button class="modal-close" (click)="cerrarModalEditarPerfil()">×</button></div>
+    <div class="modal-body">
+      <p class="modal-description">💡 Puedes modificar solo los campos que desees. Los campos vacíos mantendrán su valor actual.</p>
+      <div class="form-row-2"><div class="form-group"><label>Nombre del Taller</label><input type="text" class="modern-input" [(ngModel)]="perfilEditado.nombre" [placeholder]="perfilTaller.nombre"></div><div class="form-group"><label>Encargado</label><input type="text" class="modern-input" [(ngModel)]="perfilEditado.encargado" [placeholder]="perfilTaller.encargado"></div></div>
+      <div class="form-row-2"><div class="form-group"><label>Email</label><input type="email" class="modern-input" [(ngModel)]="perfilEditado.email" [placeholder]="perfilTaller.email"></div><div class="form-group"><label>Teléfono</label><input type="tel" class="modern-input" [(ngModel)]="perfilEditado.telefono" [placeholder]="perfilTaller.telefono"></div></div>
+      <div class="form-row-2"><div class="form-group"><label>Dirección</label><input type="text" class="modern-input" [(ngModel)]="perfilEditado.direccion" [placeholder]="perfilTaller.direccion"></div><div class="form-group"><label>Ciudad</label><input type="text" class="modern-input" [(ngModel)]="perfilEditado.ciudad" [placeholder]="perfilTaller.ciudad"></div></div>
+      <div class="form-group"><label>Especialidad</label><textarea class="modern-input textarea-input" [(ngModel)]="perfilEditado.especialidad" rows="3" [placeholder]="perfilTaller.especialidad"></textarea></div>
+    </div>
+    <div class="modal-actions"><button class="btn-cancel-modern" (click)="cerrarModalEditarPerfil()">Cancelar</button><button class="btn-save-modern" (click)="guardarCambiosPerfil()" [disabled]="guardandoPerfil">{{ guardandoPerfil ? 'Guardando...' : 'Guardar cambios' }}</button></div>
+  </div>
 </div>

@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
-from app.models import Usuario, Vehiculo, Incidente
+from app.models import Usuario, Vehiculo, Incidente, Taller, Servicio
 from app.schemas import IncidenteCreate, IncidenteResponse
 
 router = APIRouter(prefix="/api/incidentes", tags=["Incidentes"])
@@ -51,6 +51,54 @@ def crear_incidente(data: IncidenteCreate, db: Session = Depends(get_db)):
 def listar_incidentes(db: Session = Depends(get_db)):
     incidentes = db.query(Incidente).all()
     return incidentes
+
+
+@router.get("/disponibles")
+def obtener_incidentes_disponibles(
+    taller_email: str = Query(...),
+    db: Session = Depends(get_db)
+):
+    taller = db.query(Taller).filter(Taller.email == taller_email).first()
+    if not taller:
+        return []
+
+    servicios_existentes = (
+        db.query(Servicio.incidente_id)
+        .filter(Servicio.taller_id == taller.id)
+        .all()
+    )
+
+    ids_ocupados = [s.incidente_id for s in servicios_existentes]
+
+    query = (
+        db.query(Incidente)
+        .options(
+            joinedload(Incidente.usuario),
+            joinedload(Incidente.vehiculo)
+        )
+        .order_by(Incidente.id.desc())
+    )
+
+    if ids_ocupados:
+      query = query.filter(~Incidente.id.in_(ids_ocupados))
+
+    incidentes = query.all()
+
+    return [
+        {
+            "id": i.id,
+            "cliente": i.usuario.nombre if i.usuario else "Sin cliente",
+            "servicio": i.tipo_problema,
+            "ubicacion": i.ubicacion,
+            "prioridad": (i.prioridad or "").title(),
+            "fecha": i.fecha.isoformat() if i.fecha else "",
+            "vehiculo": (
+                f"{i.vehiculo.marca} {i.vehiculo.modelo} - {i.vehiculo.placa}"
+                if i.vehiculo else "Sin vehículo"
+            )
+        }
+        for i in incidentes
+    ]
 
 
 @router.get("/{incidente_id}", response_model=IncidenteResponse)
